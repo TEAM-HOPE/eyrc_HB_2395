@@ -114,8 +114,8 @@ def main():
     
     rospy.Subscriber('/detected_aruco',aruco_data,aruco_feedback_Cb)
 
-    # contourPub = rospy.Publisher('/contours',String,queue_size=10)
-    # cData = String()
+    contourPub = rospy.Publisher('/contours',String,queue_size=10)
+    cData = String()
 
     # penPub = rospy.Publisher('/penStatus', Int32, queue_size=10)
     # penData = Int32()
@@ -136,7 +136,8 @@ def main():
         if sys.argv[1] == 'img' and sys.argv[2] == '0':
               cnts = snapchat('/home/prasannakumar/Desktop/taskdrawing_ws/src/cv_basics/scripts/images/snapchat.png')
               way_points(cnts)
-              rospy.loginfo("hi")
+              cData.data = str([xListFinal,yListFinal])
+              contourPub.publish(cData)
 
         if sys.argv[1] == 'img' and sys.argv[2] == '1':
               pass
@@ -159,6 +160,7 @@ def main():
                     if (not hola_x):
                         connection.sendall(str.encode(f'{0} {0} {0}'))
                         rospy.loginfo("failure in feedback.................")
+
                     if hola_x:	# Error in global frame
                         error_g_x = xList[index] - hola_x
                         error_g_y = yList[index] - hola_y
@@ -200,8 +202,9 @@ def main():
                         if x_condition_p and y_condition_p  and theta_condition_p:
                             connection.sendall(str.encode(f'{0} {0} {0}'))
                             rospy.loginfo("Goal reached !!!!")
-						# rospy.sleep(1)
-                        if index < len(xList)-1:
+						
+
+                            if index < len(xList)-1:
                                 index += 1
                                 rate.sleep()
 
