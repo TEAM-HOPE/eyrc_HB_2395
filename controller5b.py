@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# img mode theta 0
+# function mode doubt
 
 
 import rospy
@@ -15,7 +17,7 @@ PI = 3.14
 
 
 xList , yList , xListFinal , yListFinal = [] , [] , [] , []
-theta_goals = 0
+theta_goals = []
 
 #positions and orientation
 hola_x = 0
@@ -60,16 +62,36 @@ def aruco_feedback_Cb(msg):
 	hola_x = msg.x
 	hola_y = msg.y
 	hola_theta = round(msg.theta,2)
-	
 
-def snapchat(img_path):
+def thresh_img(img_path):
     img = cv2.imread(img_path,cv2.IMREAD_UNCHANGED)
     image = cv2.resize(img, (500,500), interpolation = cv2.INTER_AREA)
     gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray_img, 100, 200)
-    ret, thresh = cv2.threshold(edges, 127, 255, 0)
+    ret, thresh = cv2.threshold(edges, 127, 255, 0) 	
+    return ret, thresh
+
+def snapchat(thresh):
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
+
+def function_mode(n):
+     global hola_x,hola_y,hola_theta,xList,yList,theta_goals
+     xList.clear()
+     yList.clear()
+     theta_goals.clear()
+
+    #  hola_x-=250
+    #  hola_y-=250
+
+     for x in range(int(2*math.pi*n)):
+          x = 400*math.cos(x/n)
+          y = 200*math.sin(2*x/n)
+          theta = (math.pi/4)*math.sin(x)
+
+          xList.append(x)
+          yList.append(y)
+          theta_goals.append(theta)
 
 
 def pen_coordinate(xList):
@@ -134,7 +156,8 @@ def main():
     if len(sys.argv) == 3:
 
         if sys.argv[1] == 'img' and sys.argv[2] == '0':
-              cnts = snapchat('/home/prasannakumar/Desktop/taskdrawing_ws/src/cv_basics/scripts/images/snapchat.png')
+              _,thresh_img = thresh_img('/home/prasannakumar/Desktop/taskdrawing_ws/src/cv_basics/scripts/images/snapchat.png')
+              cnts = snapchat(thresh_img)
               way_points(cnts)
               cData.data = str([xListFinal,yListFinal])
               contourPub.publish(cData)
@@ -144,8 +167,8 @@ def main():
               #smile
 
         if sys.argv[1] == 'fun' and sys.argv[2] == '0':
-             pass
              #function mode
+             function_mode(10)
 
         index = 0
         with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as s:
